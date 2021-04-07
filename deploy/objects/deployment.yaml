@@ -1,8 +1,12 @@
 kind: Deployment
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 metadata:
   name: nfs-client-provisioner
+  namespace: kube-system
 spec:
+  selector:
+    matchLabels:
+      app: nfs-client-provisioner
   replicas: 1
   strategy:
     type: Recreate
@@ -14,7 +18,7 @@ spec:
       serviceAccountName: nfs-client-provisioner
       containers:
         - name: nfs-client-provisioner
-          image: gcr.io/k8s-staging-sig-storage/nfs-subdir-external-provisioner:v4.0.2
+          image: registry.cn-beijing.aliyuncs.com/gisuni/nfs-subdir-external-provisioner:v4.0.2
           volumeMounts:
             - name: nfs-client-root
               mountPath: /persistentvolumes
@@ -22,11 +26,18 @@ spec:
             - name: PROVISIONER_NAME
               value: k8s-sigs.io/nfs-subdir-external-provisioner
             - name: NFS_SERVER
-              value: 10.10.10.60
+              value: 192.168.1.10 # nfs server ip
             - name: NFS_PATH
-              value: /ifs/kubernetes
+              value: /nfs/path  # nfs path
+          resources:
+            requests:
+              cpu: 200m
+              memory: 500Mi
+            limits:
+              cpu: 200m
+              memory: 500Mi
       volumes:
         - name: nfs-client-root
           nfs:
-            server: 10.10.10.60
-            path: /ifs/kubernetes
+            server: 192.168.1.10
+            path: /nfs/path
